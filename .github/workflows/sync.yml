@@ -1,0 +1,26 @@
+name: sync
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        required: true
+      files:
+        required: true
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          BASE: ${{ inputs.base }}
+          FILES: ${{ inputs.files }}
+        run: |
+          for f in $FILES; do mkdir -p "$(dirname "$f")"; curl -sSfL -o "$f" "$BASE/$f"; done
+          if [ -f kniga.html ]; then sed -i "s#$BASE/#https://babazoya.github.io/#g" kniga.html; cp kniga.html index.html; fi
+          git config user.name "BabaZoya"
+          git config user.email "noreply@github.com"
+          git add -A
+          git commit -m "assets" || true
+          git push
